@@ -260,36 +260,40 @@ completed=true
 # ЗАДАЧА 5. (2 балла)
 - Найти все курсы про Hadoop со сложностью больше трех
 ```
-# Получить все ключи с топиками
-KEYS element_topic:*
-
-# Для каждого ключа:
-GET element_topic:{element_id}
-GET element_difficulty:{element_id}
-GET element_course:{element_id}
-
-# Отфильтровать:
-# topic == "Hadoop" AND difficulty > 3
-
-# Получить уникальные course_id
-SADD temp:hadoop_courses {course_id}  # временное множество
-
-# Посмотреть результат
-SMEMBERS temp:hadoop_courses
+# 1. Найти все элементы с topic = "Hadoop"
+# (Предполагаем, что есть ключи вида `element_topic:*`)
+# Если их нет, можно просканировать все элементы:
+redis-cli --scan --pattern 'element_topic:*' | while read key; do
+  topic=$(redis-cli GET "$key")
+  if [ "$topic" = "Hadoop" ]; then
+    element_id=${key#element_topic:}
+    
+    # 2. Проверить сложность элемента
+    difficulty=$(redis-cli GET "element_difficulty:$element_id")
+    if [ "$difficulty" -gt 3 ]; then
+      
+      # 3. Найти course_id для этого элемента
+      student_id=$(redis-cli SMEMBERS "students_by_element:$element_id" | head -n 1)
+      if [ -n "$student_id" ]; then
+        course_id=$(redis-cli HGET "progress:$student_id:$element_id" course_id)
+        echo "Курс $course_id (элемент $element_id, сложность $difficulty)"
+      fi
+    fi
+  fi
+done | sort -u  # Убираем дубликаты course_id
 ```
 
 - Найти всех студентов, зарегистрированных в прошлом году
 ```
-# Получить все даты регистрации
-KEYS student_reg_date:*
+current_year=$(date +%Y)
+last_year=$((current_year - 1))
 
-# Для каждого ключа:
-GET student_reg_date:{student_id}
-
-# Если начинается с "2023", добавить в результат
-SADD temp:students_2023 {student_id}
-
-# Получить результат
-SMEMBERS temp:students_2023
-
+# Сканируем все ключи регистраций
+redis-cli --scan --pattern 'student_reg_date:*' | while read key; do
+  reg_date=$(redis-cli GET "$key")
+  if [[ "$reg_date" == "$last_year"* ]]; then
+    student_id=${key#student_reg_date:}
+    echo "$student_id"
+  fi
+done
 ```
