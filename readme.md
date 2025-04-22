@@ -261,8 +261,7 @@ completed=true
 - Найти все курсы про Hadoop со сложностью больше трех
 ```
 # 1. Найти все элементы с topic = "Hadoop"
-# (Предполагаем, что есть ключи вида `element_topic:*`)
-# Если их нет, можно просканировать все элементы:
+
 redis-cli --scan --pattern 'element_topic:*' | while read key; do
   topic=$(redis-cli GET "$key")
   if [ "$topic" = "Hadoop" ]; then
