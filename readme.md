@@ -147,15 +147,6 @@ CREATE INDEX idx_element_type ON dim_learning_elements(element_type_id);
 CREATE INDEX idx_element_difficulty ON dim_learning_elements(difficulty_level);
 CREATE INDEX idx_registration_date ON dim_course_registrations(registration_date);
 
--- Вставка базовых данных (опционально)
-INSERT INTO dim_element_types (type_name, description) VALUES
-('text', 'Текстовый учебный материал'),
-('image', 'Изображение'),
-('animation', 'Анимация'),
-('video', 'Видео'),
-('audio', 'Аудио'),
-('test', 'Тест с закрытыми вопросами'),
-('open_form', 'Форма для открытого ответа');
 ```
 
 
